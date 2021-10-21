@@ -16,9 +16,11 @@ from .api_wrappers import COCO, COCOeval
 from .builder import DATASETS
 from .custom import CustomDataset
 
+from scipy import signal
+
 
 @DATASETS.register_module()
-class CocoDataset(CustomDataset):
+class CocoOrientationDataset(CustomDataset):
 
     CLASSES = ('person',)
 
@@ -121,6 +123,9 @@ class CocoDataset(CustomDataset):
         gt_labels = []
         gt_bboxes_ignore = []
         gt_masks_ann = []
+
+        gt_orientations = []
+
         for i, ann in enumerate(ann_info):
             if ann.get('ignore', False):
                 continue
@@ -134,19 +139,28 @@ class CocoDataset(CustomDataset):
             if ann['category_id'] not in self.cat_ids:
                 continue
             bbox = [x1, y1, x1 + w, y1 + h]
+            orientation_label = int(ann['orientation']) // 5
             if ann.get('iscrowd', False):
                 gt_bboxes_ignore.append(bbox)
             else:
                 gt_bboxes.append(bbox)
                 gt_labels.append(self.cat2label[ann['category_id']])
                 gt_masks_ann.append(ann.get('segmentation', None))
+                # gt_orientations.append(ann['orientation_class']-1)
+                # gt_orientations.append(int(ann['orientation']) // 5)
+                print(orientation_label)
+                print(self.hoe_heatmap_gen(orientation_label))
+                exit()
+                gt_orientations.append(self.hoe_heatmap_gen(orientation_label))
 
         if gt_bboxes:
             gt_bboxes = np.array(gt_bboxes, dtype=np.float32)
             gt_labels = np.array(gt_labels, dtype=np.int64)
+            gt_orientations = np.array(gt_orientations, dtype=np.float32)
         else:
             gt_bboxes = np.zeros((0, 4), dtype=np.float32)
             gt_labels = np.array([], dtype=np.int64)
+            gt_orientations = np.array([], dtype=np.float32)
 
         if gt_bboxes_ignore:
             gt_bboxes_ignore = np.array(gt_bboxes_ignore, dtype=np.float32)
@@ -160,7 +174,8 @@ class CocoDataset(CustomDataset):
             labels=gt_labels,
             bboxes_ignore=gt_bboxes_ignore,
             masks=gt_masks_ann,
-            seg_map=seg_map)
+            seg_map=seg_map,
+            orientations=gt_orientations)
 
         return ann
 
@@ -544,3 +559,15 @@ class CocoDataset(CustomDataset):
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results
+
+    def hoe_heatmap_gen(label, output_len=72, gaussian_kernel=11, sigma=4.0):
+        gaussian_kernel = 6 * int(sigma) + 1
+        ret = np.zeros((output_len), dtype='float32')
+        kernel = signal.gaussian(gaussian_kernel, sigma)
+        mid_point = int(gaussian_kernel / 2)
+        for j in range(-mid_point, mid_point + 1):
+            idx = (label + j + output_len) % output_len
+            ret[idx] = kernel[j + mid_point]
+        print(ret)
+        ret = ret/ret.sum()
+        return ret.tolist()

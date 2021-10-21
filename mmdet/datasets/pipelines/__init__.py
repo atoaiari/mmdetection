@@ -4,7 +4,7 @@ from .auto_augment import (AutoAugment, BrightnessTransform, ColorTransform,
                            Translate)
 from .compose import Compose
 from .formating import (Collect, DefaultFormatBundle, ImageToTensor,
-                        ToDataContainer, ToTensor, Transpose, to_tensor)
+                        ToDataContainer, ToTensor, Transpose, to_tensor, OrientationFormatBundle)
 from .instaboost import InstaBoost
 from .loading import (LoadAnnotations, LoadImageFromFile, LoadImageFromWebcam,
                       LoadMultiChannelImageFromFiles, LoadProposals)
@@ -24,5 +24,6 @@ __all__ = [
     'InstaBoost', 'RandomCenterCropPad', 'AutoAugment', 'CutOut', 'Shear',
     'Rotate', 'ColorTransform', 'EqualizeTransform', 'BrightnessTransform',
     'ContrastTransform', 'Translate', 'RandomShift', 'Mosaic', 'MixUp',
-    'RandomAffine'
+    'RandomAffine',
+    'OrientationFormatBundle'
 ]

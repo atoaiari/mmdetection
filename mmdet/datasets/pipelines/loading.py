@@ -224,12 +224,14 @@ class LoadAnnotations:
                  with_mask=False,
                  with_seg=False,
                  poly2mask=True,
+                 with_orientation=False,
                  file_client_args=dict(backend='disk')):
         self.with_bbox = with_bbox
         self.with_label = with_label
         self.with_mask = with_mask
         self.with_seg = with_seg
         self.poly2mask = poly2mask
+        self.with_orientation = with_orientation
         self.file_client_args = file_client_args.copy()
         self.file_client = None
 
@@ -356,6 +358,19 @@ class LoadAnnotations:
         results['seg_fields'].append('gt_semantic_seg')
         return results
 
+    def _load_orientations(self, results):
+        """Private function to load orientation annotations.
+
+        Args:
+            results (dict): Result dict from :obj:`mmdet.CustomDataset`.
+
+        Returns:
+            dict: The dict contains loaded orientation annotations.
+        """
+
+        results['gt_orientations'] = results['ann_info']['orientations'].copy()
+        return results
+
     def __call__(self, results):
         """Call function to load multiple types annotations.
 
@@ -377,6 +392,8 @@ class LoadAnnotations:
             results = self._load_masks(results)
         if self.with_seg:
             results = self._load_semantic_seg(results)
+        if self.with_orientation:
+            results = self._load_orientations(results)
         return results
 
     def __repr__(self):
@@ -386,7 +403,8 @@ class LoadAnnotations:
         repr_str += f'with_mask={self.with_mask}, '
         repr_str += f'with_seg={self.with_seg}, '
         repr_str += f'poly2mask={self.poly2mask}, '
-        repr_str += f'poly2mask={self.file_client_args})'
+        repr_str += f'poly2mask={self.file_client_args}),'
+        repr_str += f'with_orientation={self.with_orientation})'
         return repr_str
 
 
