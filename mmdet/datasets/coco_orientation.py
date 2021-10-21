@@ -565,16 +565,3 @@ class CocoOrientationDataset(CustomDataset):
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results
-
-    def hoe_heatmap_gen(ori_label, ll=72, gaussian_kernel=11, sigma=4.0):
-        gaussian_kernel = 6 * int(sigma) + 1
-        ret = np.zeros((ll), dtype='float32')
-        kernel = signal.gaussian(gaussian_kernel, sigma)
-        mid_point = int(gaussian_kernel / 2)
-        for ji in range(-mid_point, mid_point + 1):
-            print(ori_label, ji, ll)
-            idx = (ori_label + ji + ll) % ll
-            ret[idx] = kernel[ji + mid_point]
-        print(ret)
-        ret = ret/ret.sum()
-        return ret.tolist()

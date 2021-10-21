@@ -67,6 +67,10 @@ class OrientationHead(BaseHead):
         pred = F.softmax(cls_score, dim=1) if cls_score is not None else None
         # gt = F.one_hot(gt_label, num_classes=4)
         losses = self.loss(pred, gt_label)
+        print(gt_label)
+        print(pred)
+        print(losses)
+        exit()
         return losses
 
     def loss(self, cls_score, gt_label):
