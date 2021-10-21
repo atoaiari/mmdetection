@@ -314,8 +314,11 @@ class OrientationCascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         rois = bbox2roi([res.pos_bboxes for res in sampling_results])
         bbox_feats = self.orientation_bbox_roi_extractor(x[:self.orientation_bbox_roi_extractor.num_inputs], rois)
         
-        orientation_gt_labels = torch.cat([gt_orientations[ix].gather(0, sampling_results[ix].pos_assigned_gt_inds) for ix in range(len(gt_orientations))])
-        print(bbox_feats.shape)
+        # orientation_gt_labels = torch.cat([gt_orientations[ix].gather(0, sampling_results[ix].pos_assigned_gt_inds) for ix in range(len(gt_orientations))])
+        orientation_gt_labels = torch.cat([gt_orientations[ix].index_select(0, sampling_results[ix].pos_assigned_gt_inds) for ix in range(len(gt_orientations))])
+        print(gt_orientations)
+        print([sr.pos_assigned_gt_inds for sr in sampling_results])
+        print(orientation_gt_labels)
         loss_orientation = self.orientation_bbox_head.forward_train(bbox_feats, orientation_gt_labels)
 
         for name, value in loss_orientation.items():

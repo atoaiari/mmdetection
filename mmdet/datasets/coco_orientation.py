@@ -125,6 +125,8 @@ class CocoOrientationDataset(CustomDataset):
         gt_masks_ann = []
 
         gt_orientations = []
+        orientation_kernel_len = 72
+        sigma = 4.0
 
         for i, ann in enumerate(ann_info):
             if ann.get('ignore', False):
@@ -146,13 +148,17 @@ class CocoOrientationDataset(CustomDataset):
                 gt_bboxes.append(bbox)
                 gt_labels.append(self.cat2label[ann['category_id']])
                 gt_masks_ann.append(ann.get('segmentation', None))
-                # gt_orientations.append(ann['orientation_class']-1)
-                # gt_orientations.append(int(ann['orientation']) // 5)
-                print(orientation_label)
-                print(self.hoe_heatmap_gen(orientation_label))
-                exit()
-                gt_orientations.append(self.hoe_heatmap_gen(orientation_label))
-
+                
+                gaussian_kernel = 6 * int(sigma) + 1
+                ret = np.zeros((orientation_kernel_len), dtype='float32')
+                kernel = signal.gaussian(gaussian_kernel, sigma)
+                mid_point = int(gaussian_kernel / 2)
+                for j in range(-mid_point, mid_point + 1):
+                    idx = (orientation_label + j + orientation_kernel_len) % orientation_kernel_len
+                    ret[idx] = kernel[j + mid_point]
+                ret = ret/ret.sum()
+                gt_orientations.append(ret)
+        
         if gt_bboxes:
             gt_bboxes = np.array(gt_bboxes, dtype=np.float32)
             gt_labels = np.array(gt_labels, dtype=np.int64)
@@ -560,14 +566,15 @@ class CocoOrientationDataset(CustomDataset):
             tmp_dir.cleanup()
         return eval_results
 
-    def hoe_heatmap_gen(label, output_len=72, gaussian_kernel=11, sigma=4.0):
+    def hoe_heatmap_gen(ori_label, ll=72, gaussian_kernel=11, sigma=4.0):
         gaussian_kernel = 6 * int(sigma) + 1
-        ret = np.zeros((output_len), dtype='float32')
+        ret = np.zeros((ll), dtype='float32')
         kernel = signal.gaussian(gaussian_kernel, sigma)
         mid_point = int(gaussian_kernel / 2)
-        for j in range(-mid_point, mid_point + 1):
-            idx = (label + j + output_len) % output_len
-            ret[idx] = kernel[j + mid_point]
+        for ji in range(-mid_point, mid_point + 1):
+            print(ori_label, ji, ll)
+            idx = (ori_label + ji + ll) % ll
+            ret[idx] = kernel[ji + mid_point]
         print(ret)
         ret = ret/ret.sum()
         return ret.tolist()

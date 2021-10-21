@@ -133,7 +133,7 @@ model = dict(
             type='OrientationHead',
             loss=dict(type='MSELoss'),
             in_channels=256,
-            num_classes=4)),
+            num_classes=72)),
     # model training and testing settings
     train_cfg=dict(
         rpn=dict(
