@@ -484,6 +484,21 @@ class OrientationCascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                             rescale)
                         segm_results.append(segm_result)
             ms_segm_result['ensemble'] = segm_results
+        
+
+
+        ######################################################################
+        # last bbox head for orientation
+        ######################################################################
+        orientation_results = []
+        for i in range(num_imgs):
+            rois = bbox2roi([det_bboxes[i]])
+            bbox_feats = self.orientation_bbox_roi_extractor(
+                x[:len(self.orientation_bbox_roi_extractor.featmap_strides)], rois)
+
+            orientation_results.append(self.orientation_bbox_head.simple_test(bbox_feats))
+
+        ######################################################################
 
         if self.with_mask:
             results = list(
@@ -491,7 +506,7 @@ class OrientationCascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         else:
             results = ms_bbox_result['ensemble']
 
-        return results
+        return results, orientation_results
 
     def aug_test(self, features, proposal_list, img_metas, rescale=False):
         """Test with augmentations.

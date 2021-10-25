@@ -50,6 +50,7 @@ class OrientationHead(BaseHead):
         """Test without augmentation."""
         # if isinstance(x, tuple):
         #     x = x[-1]
+        x = x.view(x.size(0), -1)
         cls_score = self.fc(x)
         if isinstance(cls_score, list):
             cls_score = sum(cls_score) / float(len(cls_score))
