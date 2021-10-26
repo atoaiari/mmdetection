@@ -1,0 +1,112 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+import torch.nn as nn
+import torch.nn.functional as F
+
+from mmdet.models.losses import Accuracy
+from ..builder import HEADS, build_loss
+# from ..utils import is_tracing
+from .base_head import BaseHead
+
+from ..backbones.resnet import BasicBlock, ResLayer
+
+
+
+@HEADS.register_module()
+class ResNetOrientationHead(BaseHead):
+
+    def __init__(self,
+                 num_classes,
+                 in_channels,
+                 roi_feat_size=7,
+                 init_cfg=None,
+                 loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+                 topk=(1, ),
+                 cal_acc=False):
+        super(ResNetOrientationHead, self).__init__(init_cfg=init_cfg)
+
+        assert isinstance(loss, dict)
+        assert isinstance(topk, (int, tuple))
+        if isinstance(topk, int):
+            topk = (topk, )
+        for _topk in topk:
+            assert _topk > 0, 'Top-k should be larger than 0'
+        self.topk = topk
+
+        self.compute_loss = build_loss(loss)
+        self.compute_accuracy = Accuracy(topk=self.topk)
+        self.cal_acc = cal_acc
+
+        self.in_channels = in_channels
+        self.num_classes = num_classes
+        # self.roi_feat_size = roi_feat_size
+        # self.in_channels *= (self.roi_feat_size * self.roi_feat_size)
+
+        print(self.in_channels)
+
+        if self.num_classes <= 0:
+            raise ValueError(
+                f'num_classes={num_classes} must be a positive integer')
+        
+        self.conv_to_reduce_channels = nn.Conv2d(self.in_channels, 64, 1)
+        self.reslayer1 = self.make_res_layer(block=BasicBlock, inplanes=64, planes=128, num_blocks=2, stride=2)
+        self.reslayer2 = self.make_res_layer(block=BasicBlock, inplanes=128, planes=256, num_blocks=2, stride=2)
+        self.reslayer3 = self.make_res_layer(block=BasicBlock, inplanes=256, planes=512, num_blocks=2, stride=2)
+        # self.reslayer1 = self.make_res_layer(block=BasicBlock, inplanes=256, planes=512, num_blocks=2, stride=2)
+        # self.reslayer2 = self.make_res_layer(block=BasicBlock, inplanes=512, planes=1024, num_blocks=2, stride=2)
+        # self.reslayer3 = self.make_res_layer(block=BasicBlock, inplanes=1024, planes=2048, num_blocks=2, stride=2)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(512, self.num_classes)
+
+    def make_res_layer(self, **kwargs):
+        """Pack all blocks in a stage into a ``ResLayer``."""
+        return ResLayer(**kwargs)
+
+    def simple_test(self, x):
+        """Test without augmentation."""
+        # if isinstance(x, tuple):
+        #     x = x[-1]
+        x = self.conv_to_reduce_channels(x)
+        x = self.reslayer1(x)
+        x = self.reslayer2(x)
+        x = self.reslayer3(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        cls_score = self.fc(x)
+        if isinstance(cls_score, list):
+            cls_score = sum(cls_score) / float(len(cls_score))
+        pred = F.softmax(cls_score, dim=1) if cls_score is not None else None
+        return self.post_process(pred)
+
+    def forward_train(self, x, gt_label):
+        # if isinstance(x, tuple):
+        #     x = x[-1]
+        x = self.conv_to_reduce_channels(x)
+        x = self.reslayer1(x)
+        x = self.reslayer2(x)
+        x = self.reslayer3(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        cls_score = self.fc(x)
+        if isinstance(cls_score, list):
+            cls_score = sum(cls_score) / float(len(cls_score))
+        pred = F.softmax(cls_score, dim=1) if cls_score is not None else None
+        # gt = F.one_hot(gt_label, num_classes=4)
+        losses = self.loss(pred, gt_label)
+        return losses
+
+    def loss(self, cls_score, gt_label):
+        losses = dict()
+        # compute loss
+        loss = self.compute_loss(cls_score, gt_label)
+        if self.cal_acc:
+            # compute accuracy (not implemented)
+            pass
+        losses['loss'] = loss
+        return losses
+
+    def post_process(self, pred):
+        # on_trace = is_tracing()
+        # if torch.onnx.is_in_onnx_export() or on_trace:
+        #     return pred
+        pred = list(pred.detach().cpu().numpy())
+        return pred
