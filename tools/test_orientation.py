@@ -316,7 +316,8 @@ def main():
 
         cocoGt = dataset.coco
         imgIds = cocoGt.getImgIds()
-        print(imgIds)
+        print(f"len imgIds: {len(imgIds)}")
+        print(f"len orientation results: {len(orientation_results)}")
 
         pred_ori = []
         gt_ori = []
@@ -344,7 +345,7 @@ def main():
 
             # only one label (person)
             bboxes = det[0]
-            print(f"\nimage {img_id} with {len([bb for bb in bboxes if bb[4]>=bbox_threshold])} valid proposals")
+            # print(f"\nimage {img_id} with {len([bb for bb in bboxes if bb[4]>=bbox_threshold])} valid proposals")
             for i in range(bboxes.shape[0]):
                 bbox_score = float(bboxes[i][4])
                 if bbox_score >= bbox_threshold:

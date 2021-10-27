@@ -495,8 +495,12 @@ class OrientationCascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
             rois = bbox2roi([det_bboxes[i]])
             bbox_feats = self.orientation_bbox_roi_extractor(
                 x[:len(self.orientation_bbox_roi_extractor.featmap_strides)], rois)
-
-            orientation_results.append(self.orientation_bbox_head.simple_test(bbox_feats))
+            
+            if int(len(det_bboxes[i])) > 0:
+                orientation_results.append(self.orientation_bbox_head.simple_test(bbox_feats))
+            else:
+                orientation_results.append(np.zeros(72))
+                print("\nZero valid detections")
 
         ######################################################################
 
