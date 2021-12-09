@@ -42,6 +42,7 @@ class OrientationCascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
 
         self.num_stages = num_stages
         self.stage_loss_weights = stage_loss_weights
+        
         super(OrientationCascadeRoIHead, self).__init__(
             bbox_roi_extractor=bbox_roi_extractor,
             bbox_head=bbox_head,
@@ -310,16 +311,28 @@ class OrientationCascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         ######################################################################
         # last bbox head forward and loss for orientation
         ######################################################################
-    
+        # orientation_loss_weight = torch.zeros((1,), requires_grad=True)
+
         rois = bbox2roi([res.pos_bboxes for res in sampling_results])
         bbox_feats = self.orientation_bbox_roi_extractor(x[:self.orientation_bbox_roi_extractor.num_inputs], rois)
         
         # orientation_gt_labels = torch.cat([gt_orientations[ix].gather(0, sampling_results[ix].pos_assigned_gt_inds) for ix in range(len(gt_orientations))])
         orientation_gt_labels = torch.cat([gt_orientations[ix].index_select(0, sampling_results[ix].pos_assigned_gt_inds) for ix in range(len(gt_orientations))])
+
+        for ixs in range(len(gt_orientations)):
+            print([np.argmax(gt_ori) for gt_ori in gt_orientations[ixs].cpu()])
+            print(sampling_results[ixs].__dict__)
+            # if torch.min(sampling_results[ixs].pos_is_gt) != 1:
+            #     print("\nNot only GT!!!!")
+            #     print(sampling_results[ixs].pos_is_gt)
+        print([np.argmax(gt_ori_) for gt_ori_ in orientation_gt_labels.cpu()])
+        print(bbox_feats.shape)
+        exit()
+
         loss_orientation = self.orientation_bbox_head.forward_train(bbox_feats, orientation_gt_labels)
 
         for name, value in loss_orientation.items():
-            losses['orientation.{}'.format(name)] = value   
+            losses['orientation.{}'.format(name)] = value
 
         return losses
 

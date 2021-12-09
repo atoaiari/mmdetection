@@ -131,7 +131,7 @@ model = dict(
             featmap_strides=[4, 8, 16, 32]),
         orientation_head=dict(
             type='ResNetOrientationHead',
-            loss=dict(type='MSELoss'),
+            loss=dict(type='MSELoss', loss_weight=100.0),
             in_channels=256,
             num_classes=72)),
     # model training and testing settings
@@ -232,7 +232,7 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True, with_orientation=True),
-    dict(type='Resize', img_scale=(800, 480), keep_ratio=True),
+    dict(type='Resize', img_scale=(1333,800), keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.0),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -243,7 +243,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(800, 480),
+        img_scale=(1333,800),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -276,7 +276,7 @@ evaluation = dict(metric=['bbox', 'segm'])
 
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.0001, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # lerning policy
 lr_config = dict(

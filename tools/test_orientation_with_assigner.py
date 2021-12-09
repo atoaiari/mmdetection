@@ -312,7 +312,7 @@ def main():
         weak_proposals = 0      # if overlap with gt < gt_overlap_threshold
         
         bbox_threshold = 0.5
-        gt_overlap_threshold = 0.5
+        gt_overlap_threshold = 0.7
 
         bbox_results_with_gt = []
 
@@ -331,76 +331,27 @@ def main():
             gt_ann_ids = cocoGt.get_ann_ids(img_ids=[img_id])
             gt_ann_info = cocoGt.load_anns(gt_ann_ids)
             gt_ann = dataset._parse_ann_info(dataset.data_infos[idx], gt_ann_info)
-            # img_id = dataset.img_ids[idx]
-            # gt_ann_ids = cocoGt.getAnnIds(imgIds=[img_id])
-            # gt_ann_info = cocoGt.loadAnns(gt_ann_ids)
-            # gt_ann = dataset._parse_ann_info(gt_ann_info)
             
             gt_bboxes = np.array([gt_bbox for gt_bbox in gt_ann['bboxes']])
-
-            # check_overlaps_with_gt = np.zeros(len(gt_bboxes))
-            selected_pred = np.full(len(gt_bboxes), -1)
-            selected_pred_max = np.zeros(len(gt_bboxes))
 
             det, _ = outputs[idx]
             ori = orientation_results[idx]
 
             # only one label (person)
             bboxes = det[0]
-            # print(f"\nimage {img_id} with {len([bb for bb in bboxes if bb[4]>=bbox_threshold])} valid proposals")
-            for i in range(bboxes.shape[0]):
-                bbox_score = float(bboxes[i][4])
-                if bbox_score >= bbox_threshold:
-                    accepted_proposals += 1
-                    pred_bbox = np.array([bboxes[i][:4]])
-
-                    overlaps = bbox_overlaps(pred_bbox, gt_bboxes)
-                    max_idx = np.argmax(overlaps)
-
-                    if np.max(overlaps) < gt_overlap_threshold:
-                        weak_proposals += 1
-                    else:
-                        strong_proposals += 1
-
-                    # check_overlaps_with_gt[max_idx] = 1
-                    if np.max(overlaps) > selected_pred_max[max_idx]:
-                        selected_pred[max_idx] = i
-                        selected_pred_max[max_idx] = np.max(overlaps)
-                    
-                    gt_ori.append(int(np.argmax(gt_ann['orientations'][max_idx])))
-                    pred_ori.append(int(np.argmax(ori[i]))) 
-
-                    # for saving the detected bboxes as a new dataset for mebow testing
-                    res_dict = dict()
-                    res_dict['image_id'] = img_id
-                    res_dict['bbox'] = xyxy2xywh(bboxes[i])
-                    res_dict['score'] = bbox_score
-                    res_dict['category_id'] = dataset.cat_ids[0]    # only person label
-                    res_dict['orientation'] = int(np.argmax(ori[i]))
-                    res_dict['orientation_score'] = float(np.max(ori[i]))
-                    res_dict['gt_annotation_id'] = gt_ann_ids[max_idx]
-                    gt_ann_original = cocoGt.loadAnns(gt_ann_ids[max_idx])
-                    res_dict['gt_orientation'] = gt_ann_original[0]["orientation"]
-                    bbox_results_with_gt.append(res_dict)
-                else:
-                    discarded_proposals += 1
-
-
-            # if not check_overlaps_with_gt.all():
-            #     print(f"GT bboxes not covered for img {img_id}")
-            #     exit()
-
-            for ix, sp in enumerate(selected_pred):
-                if sp >= 0:
-                    mint_pred_ori.append(int(np.argmax(ori[sp])))
-                    mint_gt_ori.append(int(np.argmax(gt_ann["orientations"][ix])))
+            pred_bboxes = [bbox[:4] for bbox in bboxes if float(bbox[4]) >= bbox_threshold]
             
-            # if not (selected_pred >= 0).all():
-            #     print(f"!!!GT bboxes not covered for img {img_id}!!!")
-            #     exit()
-            # if len(set(selected_pred)) != len(gt_bboxes):
-            #     print(f"Duplicated proposals")
-            #     exit()
+            assigner = MaxIoUAssigner(gt_overlap_threshold, gt_overlap_threshold)
+            t_pred_bboxes = torch.Tensor(pred_bboxes)
+            t_gt_bboxes = torch.Tensor(gt_bboxes)
+            
+            if len(pred_bboxes) > 0:
+                assign_result = assigner.assign(t_pred_bboxes, t_gt_bboxes)
+                gt_inds = assign_result.gt_inds.detach().cpu().numpy()
+                for i in range(len(gt_inds)):
+                    if gt_inds[i] > 0:
+                        gt_ori.append(int(np.argmax(gt_ann['orientations'][gt_inds[i] - 1])))
+                        pred_ori.append(int(np.argmax(ori[i]))) 
 
         if pred_ori:
             print("\nComplete classification report\n")
@@ -420,11 +371,6 @@ def main():
         if mint_pred_ori:
             print("\nMint classification report\n")
             print(classification_report(mint_gt_ori, mint_pred_ori))
-
-        print(f"accepted proposals: {accepted_proposals}")
-        print(f"rejected proposals: {discarded_proposals}")
-        print(f"weak proposals: {weak_proposals}")
-        print(f"strong proposals: {strong_proposals}")
 
         # print(f"len(bbox_results_with_gt): {len(bbox_results_with_gt)}")
         # mmcv.dump(bbox_results_with_gt, osp.join(cfg.work_dir, f'bbox_results_with_gt_{int(bbox_threshold*10)}.json'))
