@@ -175,6 +175,13 @@ def main():
             CLASSES=datasets[0].CLASSES)
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
+
+    # for name, param in model.named_parameters():
+    #     if param.requires_grad:
+    #         if "orientation" in name:
+    #             print(name)
+    # exit()
+
     train_detector(
         model,
         datasets,
