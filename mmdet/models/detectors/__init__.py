@@ -39,6 +39,7 @@ from .yolof import YOLOF
 from .yolox import YOLOX
 
 from .orientation_cascade_rcnn import OrientationCascadeRCNN
+from .orientation_faster_rcnn import OrientationFasterRCNN
 
 __all__ = [
     'ATSS', 'BaseDetector', 'SingleStageDetector', 'TwoStageDetector', 'RPN',
@@ -48,5 +49,6 @@ __all__ = [
     'NASFCOS', 'PointRend', 'GFL', 'CornerNet', 'PAA', 'YOLOV3', 'YOLACT',
     'VFNet', 'DETR', 'TridentFasterRCNN', 'SparseRCNN', 'SCNet', 'SOLO',
     'DeformableDETR', 'AutoAssign', 'YOLOF', 'CenterNet', 'YOLOX',
-    'TwoStagePanopticSegmentor', 'PanopticFPN', 'OrientationCascadeRCNN'
+    'TwoStagePanopticSegmentor', 'PanopticFPN', 
+    'OrientationCascadeRCNN', 'OrientationFasterRCNN'
 ]

@@ -1,4 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
+
 import argparse
 import os
 import os.path as osp
@@ -318,7 +322,7 @@ def main():
 
         cocoGt = dataset.coco
         imgIds = cocoGt.getImgIds()
-        print(f"len imgIds: {len(imgIds)}")
+        print(f"\nlen img ids: {len(imgIds)}")
         print(f"len orientation results: {len(orientation_results)}")
 
         pred_ori = []
@@ -342,7 +346,10 @@ def main():
             selected_pred = np.full(len(gt_bboxes), -1)
             selected_pred_max = np.zeros(len(gt_bboxes))
 
-            det, _ = outputs[idx]
+            if len(outputs[idx]) == 1:
+                det = outputs[idx]
+            else:
+                det, _ = outputs[idx]
             ori = orientation_results[idx]
 
             # only one label (person)
@@ -406,7 +413,7 @@ def main():
             print("\nComplete classification report\n")
             print(classification_report(gt_ori, pred_ori))
             accc = calc_acc(gt_ori, pred_ori)
-            accc_metrics = ["result", "excellent", "mid", "poor_225", "poor", "poor_45"]
+            accc_metrics = ["result", "excellent_5", "mid_15", "poor_225", "poor_30", "poor_45"]
             for accc_metric, accc_result in zip(accc_metrics, accc):
                 print(f"{accc_metric}: {round(accc_result, 2)}")
 

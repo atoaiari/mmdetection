@@ -84,10 +84,7 @@ class OrientationCascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
             bbox_roi_extractor (dict): Config of box roi extractor.
             orientation_head (dict): Config of orientation head.
         """
-        if not isinstance(orientation_bbox_roi_extractor, list):
-            self.orientation_bbox_roi_extractor = build_roi_extractor(orientation_bbox_roi_extractor)
-        else:
-            self.orientation_bbox_roi_extractor = build_roi_extractor(orientation_bbox_roi_extractor)
+        self.orientation_bbox_roi_extractor = build_roi_extractor(orientation_bbox_roi_extractor)
         self.orientation_bbox_head = build_head(orientation_head)
 
     def init_mask_head(self, mask_roi_extractor, mask_head):
