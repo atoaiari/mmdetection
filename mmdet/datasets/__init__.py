@@ -17,6 +17,11 @@ from .xml_style import XMLDataset
 
 from .coco_orientation import CocoOrientationDataset
 
+from .fgirella_coco_tc_orientation import TCCocoDataset
+from .fgirella_coco_accuracy import CocoDatasetAccuracy
+from .fgirella_coco_tc_8_orientation import TC8CocoDataset
+from .fgirella_coco_accuracy8 import CocoDatasetAccuracy8
+
 __all__ = [
     'CustomDataset', 'XMLDataset', 'CocoDataset', 'DeepFashionDataset',
     'VOCDataset', 'CityscapesDataset', 'LVISDataset', 'LVISV05Dataset',
@@ -24,5 +29,7 @@ __all__ = [
     'DistributedSampler', 'build_dataloader', 'ConcatDataset', 'RepeatDataset',
     'ClassBalancedDataset', 'WIDERFaceDataset', 'DATASETS', 'PIPELINES',
     'build_dataset', 'replace_ImageToTensor', 'get_loading_pipeline',
-    'NumClassCheckHook', 'CocoPanopticDataset', 'MultiImageMixDataset', 'CocoOrientationDataset'
+    'NumClassCheckHook', 'CocoPanopticDataset', 'MultiImageMixDataset', 'CocoOrientationDataset',
+    'TCCocoDataset', 'CocoDatasetAccuracy', 'TC8CocoDataset',
+    'CocoDatasetAccuracy8'
 ]

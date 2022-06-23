@@ -26,6 +26,8 @@ from .trident_roi_head import TridentRoIHead
 from .orientation_cascade_roi_head import OrientationCascadeRoIHead
 from .orientation_faster_roi_head import OrientationFasterRoiHead
 
+from .fgirella_standard_roi_double_head import StandardRoIDoubleHead
+
 __all__ = [
     'BaseRoIHead', 'CascadeRoIHead', 'DoubleHeadRoIHead', 'MaskScoringRoIHead',
     'HybridTaskCascadeRoIHead', 'GridRoIHead', 'ResLayer', 'BBoxHead',
@@ -37,5 +39,6 @@ __all__ = [
     'CoarseMaskHead', 'DynamicRoIHead', 'SparseRoIHead', 'TridentRoIHead',
     'SCNetRoIHead', 'SCNetMaskHead', 'SCNetSemanticHead', 'SCNetBBoxHead',
     'FeatureRelayHead', 'GlobalContextHead',
-    'OrientationCascadeRoIHead', 'OrientationFasterRoiHead'
+    'OrientationCascadeRoIHead', 'OrientationFasterRoiHead',
+    'StandardRoIDoubleHead'
 ]

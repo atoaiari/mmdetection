@@ -41,6 +41,8 @@ from .yolox import YOLOX
 from .orientation_cascade_rcnn import OrientationCascadeRCNN
 from .orientation_faster_rcnn import OrientationFasterRCNN
 
+from .fgirella_orientation_two_stage import OrientationTwoStageDetector
+
 __all__ = [
     'ATSS', 'BaseDetector', 'SingleStageDetector', 'TwoStageDetector', 'RPN',
     'KnowledgeDistillationSingleStageDetector', 'FastRCNN', 'FasterRCNN',
@@ -50,5 +52,6 @@ __all__ = [
     'VFNet', 'DETR', 'TridentFasterRCNN', 'SparseRCNN', 'SCNet', 'SOLO',
     'DeformableDETR', 'AutoAssign', 'YOLOF', 'CenterNet', 'YOLOX',
     'TwoStagePanopticSegmentor', 'PanopticFPN', 
-    'OrientationCascadeRCNN', 'OrientationFasterRCNN'
+    'OrientationCascadeRCNN', 'OrientationFasterRCNN',
+    'OrientationTwoStageDetector'
 ]

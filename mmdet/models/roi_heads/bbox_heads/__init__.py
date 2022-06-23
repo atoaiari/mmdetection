@@ -7,8 +7,13 @@ from .double_bbox_head import DoubleConvFCBBoxHead
 from .sabl_head import SABLHead
 from .scnet_bbox_head import SCNetBBoxHead
 
+from .fgirella_ICIP_head import ICIPHead
+from .fgirella_sigma_orientation_head import SigmaOrientationHead
+from .fgirella_sigma_BBox_head import SigmaBBoxHead
+
 __all__ = [
     'BBoxHead', 'ConvFCBBoxHead', 'Shared2FCBBoxHead',
     'Shared4Conv1FCBBoxHead', 'DoubleConvFCBBoxHead', 'SABLHead', 'DIIHead',
-    'SCNetBBoxHead'
+    'SCNetBBoxHead',
+    'ICIPHead', 'SigmaOrientationHead', 'SigmaBBoxHead'
 ]
